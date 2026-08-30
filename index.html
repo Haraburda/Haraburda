@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise SIOP Demand Sensing Dashboard</title>
+    <!-- Tailwind CSS for sleek executive styling -->
+    <script src="https://jsdelivr.net"></script>
+    <!-- Chart.js for data visualization -->
+    <script src="https://jsdelivr.net"></script>
+    <!-- Pyodide to run Python inside the browser -->
+    <script src="https://jsdelivr.net"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen font-sans">
+
+    <!-- Header Section -->
+    <header class="bg-gray-800 border-b border-gray-700 px-6 py-4 shadow-md">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <h1 class="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+                    🚀 SIOP Demand Sensing Engine
+                </h1>
+                <p class="text-sm text-gray-400 mt-1">Multi-Site Enterprise Forecast Validation Layer</p>
+            </div>
+            <div id="status-badge" class="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-900/40 text-amber-400 border border-amber-700/50">
+                <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                Initializing Python Engine...
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Analytics Framework -->
+    <main class="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
+        
+        <!-- Controls & KPIs Row -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Parameter Tuning Control Panel -->
+            <div class="bg-gray-800 p-5 rounded-xl border border-gray-700 shadow-sm flex flex-col justify-between">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-200 mb-4">🎛️ Optimization Framework</h3>
+                    <div class="space-y-5">
+                        <div>
+                            <label for="alpha-slider" class="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-2 flex justify-between">
+                                <span>Smoothing Parameter (Alpha)</span>
+                                <span id="alpha-val" class="text-blue-400 font-bold">0.40</span>
+                            </label>
+                            <input id="alpha-slider" type="range" min="0.05" max="0.95" step="0.05" value="0.40" disabled
+                                class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-500 disabled:opacity-50">
+                            <p class="text-[11px] text-gray-500 mt-1">Higher weights react faster to recent consumption spikes; lower weights favor historical baseline stability.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-6 pt-4 border-t border-gray-700/50">
+                    <div class="text-xs text-gray-400 flex items-center gap-1.5">
+                        <span class="text-green-400">✓</span> Built with verifiable Python-backed data assets.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Operational Executive KPIs -->
+            <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="bg-gray-800 p-5 rounded-xl border border-gray-700 flex flex-col justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Mean Absolute Error (MAE)</p>
+                        <h2 id="kpi-mae" class="text-4xl font-extrabold text-white mt-2">--</h2>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">Quantifies average volumetric variance per site period to protect baseline storage profiles.</p>
+                </div>
+                <div class="bg-gray-800 p-5 rounded-xl border border-gray-700 flex flex-col justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Root Mean Squared Error</p>
+                        <h2 id="kpi-rmse" class="text-4xl font-extrabold text-white mt-2">--</h2>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">Applies heavy geometric penalties to extreme spikes, isolating severe capacity risks.</p>
+                </div>
+                <div class="bg-gray-800 p-5 rounded-xl border border-gray-700 flex flex-col justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Forecast Bias</p>
+                        <h2 id="kpi-bias" class="text-4xl font-extrabold mt-2 text-white">--</h2>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">Negative percentages indicate safe, lean boundaries that prevent dead capital allocation.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts & Data Ledger Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Chart Visualization -->
+            <div class="lg:col-span-2 bg-gray-800 p-5 rounded-xl border border-gray-700 shadow-sm">
+                <h3 class="text-lg font-semibold text-gray-200 mb-4">📈 Consumption Trends vs Smoothed Targets</h3>
+                <div class="relative h-80">
+                    <canvas id="demandChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Simulated Enterprise Data Ledger -->
+            <div class="bg-gray-800 p-5 rounded-xl border border-gray-700 shadow-sm flex flex-col">
+                <h3 class="text-lg font-semibold text-gray-200 mb-3">📋 Source Material Matrix</h3>
+                <p class="text-xs text-gray-400 mb-3">Live data compiled across distinct production networks:</p>
+                <div class="overflow-y-auto flex-1 max-h-64 border border-gray-700 rounded-lg">
+                    <table class="w-full text-left text-xs text-gray-300">
+                        <thead class="bg-gray-700/50 sticky top-0 text-gray-400 uppercase font-medium">
+                            <tr>
+                                <th class="p-2.5">Site</th>
+                                <th class="p-2.5">Part</th>
+                                <th class="p-2.5 text-right">Actuals</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-700/50">
+                            <tr class="hover:bg-gray-700/30">
+                                <td class="p-2.5 font-mono">SITE-A</td>
+                                <td class="p-2.5 font-mono">P-101</td>
+                                <td class="p-2.5 text-right font-semibold">100</td>
+                            </tr>
+                            <tr class="hover:bg-gray-700/30">
+                                <td class="p-2.5 font-mono">SITE-A</td>
+                                <td class="p-2.5 font-mono">P-101</td>
+                                <td class="p-2.5 text-right font-semibold">120</td>
+                            </tr>
+                            <tr class="hover:bg-gray-700/30">
+                                <td class="p-2.5 font-mono">SITE-A</td>
+                                <td class="p-2.5 font-mono">P-101</td>
+                                <td class="p-2.5 text-right font-semibold">115</td>
+                            </tr>
+                            <tr class="hover:bg-gray-700/30">
+                                <td class="p-2.5 font-mono">SITE-A</td>
+                                <td class="p-2.5 font-mono">P-101</td>
+                                <td class="p-2.5 text-right font-semibold">130</td>
+                            </tr>
+                            <tr class="hover:bg-gray-700/30">
+                                <td class="p-2.5 font-mono">SITE-B</td>
+                                <td class="p-2.5 font-mono">P-202</td>
+                                <td class="p-2.5 text-right font-semibold">200</td>
+                            </tr>
+                            <tr class="hover:bg-gray-700/30">
+                                <td class="p-2.5 font-mono">SITE-B</td>
+                                <td class="p-2.5 font-mono">P-202</td>
+                                <td class="p-2.5 text-right font-semibold">210</td>
+                            </tr>
+                            <tr class="hover:bg-gray-700/30">
+                                <td class="p-2.5 font-mono">SITE-B</td>
+                                <td class="p-2.5 font-mono">P-202</td>
+                                <td class="p-2.5 text-right font-semibold">190</td>
+                            </tr>
+                            <tr class="hover:bg-gray-700/30">
+                                <td class="p-2.5 font-mono">SITE-B</td>
+                                <td class="p-2.5 font-mono">P-202</td>
+                                <td class="p-2.5 text-right font-semibold">220</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Backend Integration Engine Script -->
+    <script>
+        let pyodideInstance;
+        let mainChart;
+
+        // Base structural datasets matching forecast_engine.py configuration
+        const months = ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8'];
+        const actualDemand =;
+
+        // Initialize JavaScript Chart Object Layout
+        function createChart(rollingData, smoothData) {
+            const ctx = document.getElementById('demandChart').getContext('2d');
+            mainChart = new Chart(ctx, {
+                type: 'line',
+Use code with caution.

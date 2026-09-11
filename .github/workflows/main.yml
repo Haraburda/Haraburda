@@ -18,7 +18,7 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: '3.10'
-        cache: 'pip' # Automated caching prevents future scikit-learn wheel build failures
+        # Fixed: Removed the 'cache' line that was causing the error search crash
 
     - name: Install Data Engineering Dependencies
       run: |
@@ -27,10 +27,8 @@ jobs:
 
     - name: Run Syntax Validation Check
       run: |
-        # Changed to exclude third-party metadata directories from choking the compilation engine
         python -m compileall -q -x '\.git|\.github|\.pytest_cache' .
 
     - name: Execute Supply Chain Data Validation Tests via PyTest
       run: |
-        # Explicitly handles execution flags to guarantee true zero-exit success reporting
         pytest --maxfail=1 --disable-warnings --continue-on-collection-errors

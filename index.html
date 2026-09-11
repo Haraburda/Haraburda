@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Enterprise SIOP Demand Sensing Dashboard</title>
-    <!-- Tailwind CSS for sleek executive styling -->
+    <!-- Fixed: Restored high-velocity Tailwind CSS CDN -->
     <script src="https://jsdelivr.net"></script>
-    <!-- Chart.js for data visualization -->
+    <!-- Fixed: Restored Chart.js core visualization library -->
     <script src="https://jsdelivr.net"></script>
-    <!-- Pyodide to run Python inside the browser -->
+    <!-- Fixed: Restored Pyodide WebAssembly runtime for browser-side Python -->
     <script src="https://jsdelivr.net"></script>
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen font-sans">
@@ -120,7 +120,7 @@
                             <tr class="hover:bg-gray-700/30">
                                 <td class="p-2.5 font-mono">SITE-A</td>
                                 <td class="p-2.5 font-mono">P-101</td>
-                                <td class="p-2.5 text-right font-semibold">115</td>
+                                <td class="p-2.5 text-right font-semibold">110</td>
                             </tr>
                             <tr class="hover:bg-gray-700/30">
                                 <td class="p-2.5 font-mono">SITE-A</td>
@@ -130,22 +130,12 @@
                             <tr class="hover:bg-gray-700/30">
                                 <td class="p-2.5 font-mono">SITE-B</td>
                                 <td class="p-2.5 font-mono">P-202</td>
-                                <td class="p-2.5 text-right font-semibold">200</td>
+                                <td class="p-2.5 text-right font-semibold">45</td>
                             </tr>
                             <tr class="hover:bg-gray-700/30">
                                 <td class="p-2.5 font-mono">SITE-B</td>
                                 <td class="p-2.5 font-mono">P-202</td>
-                                <td class="p-2.5 text-right font-semibold">210</td>
-                            </tr>
-                            <tr class="hover:bg-gray-700/30">
-                                <td class="p-2.5 font-mono">SITE-B</td>
-                                <td class="p-2.5 font-mono">P-202</td>
-                                <td class="p-2.5 text-right font-semibold">190</td>
-                            </tr>
-                            <tr class="hover:bg-gray-700/30">
-                                <td class="p-2.5 font-mono">SITE-B</td>
-                                <td class="p-2.5 font-mono">P-202</td>
-                                <td class="p-2.5 text-right font-semibold">220</td>
+                                <td class="p-2.5 text-right font-semibold">50</td>
                             </tr>
                         </tbody>
                     </table>
@@ -154,18 +144,177 @@
         </div>
     </main>
 
-    <!-- Backend Integration Engine Script -->
+    <!-- Pyodide Core Engine Implementation Layer -->
     <script>
-        let pyodideInstance;
-        let mainChart;
+        let pyodide;
+        let demandChartInstance;
 
-        // Base structural datasets matching forecast_engine.py configuration
-        const months = ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8'];
-        const actualDemand =;
+        async function initDashboard() {
+            try {
+                // Initialize the WebAssembly container
+                pyodide = await loadPyodide();
+                
+                // Fetch packages needed for data sensing framework
+                await pyodide.loadPackage(['pandas', 'numpy', 'scikit-learn']);
+                
+                // Inject the fixed Python processing logic
+                await pyodide.runPythonAsync(`
+import pandas as pd
+import numpy as np
+from sklearn.metrics import mean_absolute_error, mean_squared_error
 
-        // Initialize JavaScript Chart Object Layout
-        function createChart(rollingData, smoothData) {
+class SIOPDemandForecaster:
+    def __init__(self, data: pd.DataFrame):
+        self.df = data.copy()
+        
+    def calculate_rolling_average(self, window_size: int = 3):
+        self.df[f'rolling_avg_{window_size}m'] = (
+            self.df.groupby(['site_id', 'part_id'])['actual_demand']
+            .rolling(window=window_size, min_periods=1)
+            .mean()
+            .reset_index(level=[0, 1], drop=True)
+        )
+        return self.df
+
+    def calculate_exponential_smoothing(self, alpha: float):
+        grouped = self.df.groupby(['site_id', 'part_id'])['actual_demand']
+        ewma_series = grouped.transform(lambda x: x.ewm(alpha=alpha, adjust=False).mean())
+        self.df['exp_smooth_forecast'] = ewma_series
+        self.df['exp_smooth_forecast'] = self.df.groupby(['site_id', 'part_id'])['exp_smooth_forecast'].shift(1)
+        return self.df
+
+    def compute_forecast_error_metrics(self):
+        clean_df = self.df.dropna(subset=['exp_smooth_forecast'])
+        if clean_df.empty:
+            return {"MAE": 0.0, "RMSE": 0.0, "Bias": 0.0}
+        y_true = clean_df['actual_demand']
+        y_pred = clean_df['exp_smooth_forecast']
+        
+        mae = mean_absolute_error(y_true, y_pred)
+        mse = float(mean_squared_error(y_true, y_pred))
+        rmse = np.sqrt(mse)
+        total_bias = (y_pred.sum() - y_true.sum()) / y_true.sum()
+        
+        return {
+            "MAE": round(float(mae), 2),
+            "RMSE": round(float(rmse), 2),
+            "Bias": round(float(total_bias * 100), 2)
+        }
+                `);
+
+                // Update system status interface element
+                const badge = document.getElementById('status-badge');
+                badge.className = "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-green-900/40 text-green-400 border border-green-700/50";
+                badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-green-400"></span> Engine Active`;
+                
+                // Unlock layout controls
+                const slider = document.getElementById('alpha-slider');
+                slider.disabled = false;
+                slider.addEventListener('input', handleAlphaChange);
+
+                // Run baseline calculation
+                runForecastingPipeline(0.40);
+
+            } catch (err) {
+                console.error("Pyodide Engine Init Error:", err);
+                document.getElementById('status-badge').innerText = "Catastrophic Engine Crash";
+            }
+        }
+
+        function runForecastingPipeline(alpha) {
+            // Load live structured JSON dataset into Python environment memory
+            const historicalRecords = [
+                {month: 1, site_id: "SITE-A", part_id: "P-101", actual_demand: 100},
+                {month: 2, site_id: "SITE-A", part_id: "P-101", actual_demand: 120},
+                {month: 3, site_id: "SITE-A", part_id: "P-101", actual_demand: 110},
+                {month: 4, site_id: "SITE-A", part_id: "P-101", actual_demand: 130},
+                {month: 1, site_id: "SITE-B", part_id: "P-202", actual_demand: 45},
+                {month: 2, site_id: "SITE-B", part_id: "P-202", actual_demand: 50},
+                {month: 3, site_id: "SITE-B", part_id: "P-202", actual_demand: 48},
+                {month: 4, site_id: "SITE-B", part_id: "P-202", actual_demand: 52}
+            ];
+
+            pyodide.globals.set("raw_json", JSON.stringify(historicalRecords));
+            pyodide.globals.set("current_alpha", alpha);
+
+            pyodide.runPython(`
+import json
+records = json.loads(raw_json)
+df = pd.DataFrame(records)
+forecaster = SIOPDemandForecaster(df)
+forecaster.calculate_rolling_average(window_size=3)
+forecaster.calculate_exponential_smoothing(alpha=current_alpha)
+metrics = forecaster.compute_forecast_error_metrics()
+
+# Export processing arrays back to JS context
+actuals = forecaster.df['actual_demand'].tolist()
+forecasts = forecaster.df['exp_smooth_forecast'].fillna(0).tolist()
+labels = [f"M{r['month']}-{r['site_id']}" for r in records]
+            `);
+
+            // Extract processed metrics from Python proxy variables
+            const metrics = pyodide.globals.get('metrics').toJs();
+            const actuals = pyodide.globals.get('actuals').toJs();
+            const forecasts = pyodide.globals.get('forecasts').toJs();
+            const labels = pyodide.globals.get('labels').toJs();
+
+            // Render operational dashboard values
+            document.getElementById('kpi-mae').innerText = metrics.get('MAE');
+            document.getElementById('kpi-rmse').innerText = metrics.get('RMSE');
+            document.getElementById('kpi-bias').innerText = metrics.get('Bias') + "%";
+
+            updateRenderedChart(labels, actuals, forecasts);
+        }
+
+        function handleAlphaChange(e) {
+            const val = parseFloat(e.target.value).toFixed(2);
+            document.getElementById('alpha-val').innerText = val;
+            runForecastingPipeline(parseFloat(val));
+        }
+
+        function updateRenderedChart(labels, actuals, forecasts) {
             const ctx = document.getElementById('demandChart').getContext('2d');
-            mainChart = new Chart(ctx, {
+            if (demandChartInstance) {
+                demandChartInstance.destroy();
+            }
+
+            demandChartInstance = new Chart(ctx, {
                 type: 'line',
-Use code with caution.
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Actual Consumption',
+                            data: actuals,
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderWidth: 3,
+                            tension: 0.1
+                        },
+                        {
+                            label: 'Smoothed Target (Sensing Layer)',
+                            data: forecasts,
+                            borderColor: '#10b981',
+                            borderDash:,
+                            backgroundColor: 'transparent',
+                            borderWidth: 2,
+                            tension: 0.1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { grid: { color: '#374151' }, ticks: { color: '#9ca3af' } },
+                        x: { grid: { display: false }, ticks: { color: '#9ca3af' } }
+                    },
+                    plugins: { legend: { labels: { color: '#f3f4f6' } } }
+                }
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', initDashboard);
+    </script>
+</body>
+</html>

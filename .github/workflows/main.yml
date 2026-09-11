@@ -2,57 +2,54 @@ name: Enterprise SIOP Pipeline CI/CD
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - '*'
   pull_request:
-    branches: [ "main" ]
+    branches:
+      - '*'
 
-# 1. Grants the required system permissions to update GitHub Pages
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# 2. Controls queueing to prevent older deployments from overwriting newer ones
 concurrency:
-  group: "pages"
+  group: pages
   cancel-in-progress: false
 
 jobs:
   validate-and-test:
     runs-on: ubuntu-latest
-
     steps:
-    - name: 1. Checkout Repository Source Code
-      uses: actions/checkout@v4
+      - name: 1. Checkout Repository Source Code
+        uses: actions/checkout@v4
 
-    - name: 2. Configure Python Environment
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.10'
+      - name: 2. Configure Python Environment
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
 
-    - name: 3. Install Data Engineering Dependencies
-      run: |
-        python -m pip install --upgrade pip setuptools wheel
-        pip install pandas numpy scikit-learn pytest pytest-custom_exit_code
+      - name: 3. Install Data Engineering Dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install pandas numpy scikit-learn pytest pytest-custom_exit_code
 
-    - name: 4. Check File Structure Location
-      run: |
-        echo "=== Current Repository Layout ==="
-        pwd
-        ls -R
+      - name: 4. Check File Structure Location
+        run: |
+          echo "=== Current Repository Layout ==="
+          pwd
+          ls -R
 
-    - name: 5. Execute Code Pipeline Tests
-      run: |
-        export PYTHONPATH=$GITHUB_WORKSPACE
-        python -m unittest discover -s . -p "test_*.py" || echo "All data schema validation routines verified."
+      - name: 5. Execute Code Pipeline Tests
+        run: |
+          export PYTHONPATH=$GITHUB_WORKSPACE
+          python -m unittest discover -s . -p "test_*.py" || echo "All data schema validation routines verified."
 
-    # 3. Targets and bundles the root directory files for deployment
-    - name: 6. Upload GitHub Pages Artifact
-      uses: actions/upload-pages-artifact@v3
-      with:
-        path: '.' # Look directly in the root directory for index.html
+      - name: 6. Upload GitHub Pages Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
 
-  # 4. Automates pushing the uploaded bundle directly to your live github.io site
   deploy-dashboard:
     environment:
       name: github-pages

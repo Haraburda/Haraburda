@@ -46,6 +46,10 @@ jobs:
           export PYTHONPATH=$GITHUB_WORKSPACE
           python -m unittest discover -s . -p "test_*.py" || echo "All data schema validation routines verified."
 
+      - name: Calculate Dashboard Metrics and Graph Assets
+        run: |
+          python generate_metrics.py
+
       - name: 6. Upload GitHub Pages Artifact
         uses: actions/upload-pages-artifact@v3
         with:
